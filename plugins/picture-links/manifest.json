@@ -1,15 +1,8 @@
 {
     "name": "Picture Links",
-    "description": "Allows you to click on profile pictures and banners.",
+    "description": "Allows you to click on profile pictures and banners ( forked from rico's picture link plugin ).",
     "authors": [
-      {
-        "name": "redstonekasi",
-        "id": "265064055490871297"
-      },
-      {
-        "name": "Rico040",
-        "id": "619474349845643275"
-      }
+      { "name": "awkoro__", "id": "967379106381578301" }
     ],
     "main": "src/index.tsx",
     "vendetta": {
