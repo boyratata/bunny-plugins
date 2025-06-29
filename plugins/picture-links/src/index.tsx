@@ -1,7 +1,7 @@
 import { findByProps, findByName, findByStoreName } from "@vendetta/metro";
 import { after } from "@vendetta/patcher";
 import { ReactNative } from "@vendetta/metro/common";
-import settings from "./Settings.tsx";
+import settings from "./Settings";
 
 export const storage = persistPluginData("ImagePreviewPlugin", {
     guildIconPreview: true,
