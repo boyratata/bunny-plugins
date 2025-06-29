@@ -5,7 +5,7 @@ import settings from "./Settings";
 
 export const storage = persistPluginData("ImagePreviewPlugin", {
     guildIconPreview: true,
-    useDirectImageExtension: true,
+    imageFormat: "auto", // options: "auto", "png", "jpeg", "gif"
 });
 
 const { Pressable } = findByProps("Button", "Text", "View");
@@ -24,6 +24,17 @@ function getImageSize(uri: string): Promise<{ width: number, height: number }> {
             (error) => reject(error)
         );
     });
+}
+
+function getExtension(url: string) {
+    const isAnimated = url.includes("/a_") || url.endsWith(".gif");
+    switch (storage.imageFormat) {
+        case "gif": return ".gif";
+        case "jpeg": return ".jpeg";
+        case "png": return ".png";
+        case "auto": return isAnimated ? ".gif" : ".png";
+        default: return ".png";
+    }
 }
 
 async function openModal(src: string, event) {
@@ -56,17 +67,15 @@ const unpatchAvatar = after("default", HeaderAvatar, ([{ user, style, guildId }]
         if (user.guildMemberAvatars?.[guildId].includes("a_")) ext = "gif";
     }
 
-    const guildSpecific = user.guildMemberAvatars?.[guildId] &&
+    let guildSpecific = user.guildMemberAvatars?.[guildId] &&
         `https://cdn.discordapp.com/guilds/${guildId}/users/${user.id}/avatars/${user.guildMemberAvatars[guildId]}.${ext}?size=4096`;
 
     let image = user?.getAvatarURL?.(false, 4096, true);
     if (!image) return res;
 
-    const url = typeof image === "number"
+    let url = typeof image === "number"
         ? `https://cdn.discordapp.com/embed/avatars/${Number(BigInt(user.id) >> 22n) % 6}.png`
-        : storage.useDirectImageExtension
-            ? image.replace(".webp", ".png")
-            : image;
+        : image.replace(".webp", getExtension(image));
 
     delete res.props.style;
 
@@ -83,9 +92,8 @@ const unpatchAvatar = after("default", HeaderAvatar, ([{ user, style, guildId }]
 const unpatchBanner = after("default", ProfileBanner, ([{ bannerSource }], res) => {
     if (typeof bannerSource?.uri !== "string" || !res) return res;
 
-    const url = storage.useDirectImageExtension
-        ? bannerSource.uri.replace(/(?:\?size=\d{3,4})?$/, "?size=4096").replace(".webp", ".png")
-        : bannerSource.uri.replace(/(?:\?size=\d{3,4})?$/, "?size=4096");
+    const raw = bannerSource.uri.replace(/(?:\?size=\d{3,4})?$/, "?size=4096");
+    const url = raw.replace(".webp", getExtension(raw));
 
     return <Pressable onPress={({ nativeEvent }) => openModal(url, nativeEvent)}>{res}</Pressable>;
 });
@@ -101,8 +109,8 @@ if (storage.guildIconPreview) {
             let ext = "png";
             if (guild.icon.includes("a_")) ext = "gif";
 
-            let url = `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.${ext}?size=4096`;
-            if (storage.useDirectImageExtension) url = url.replace(".webp", ".png");
+            let raw = `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.${ext}?size=4096`;
+            let url = raw.replace(".webp", getExtension(raw));
 
             return (
                 <Pressable onPress={({ nativeEvent }) => openModal(url, nativeEvent)}>
