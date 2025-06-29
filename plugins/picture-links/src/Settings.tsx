@@ -1,8 +1,10 @@
-import { ReactNative as RN } from "@vendetta/metro/common";
 import { showToast } from "@vendetta/ui/toasts";
+import { ReactNative as RN } from "@vendetta/metro/common";
 import { BetterTableRowGroup } from "$/components/BetterTableRow";
 import { useProxy } from "$/stuff/hooks";
 import { storage } from "..";
+
+const extOptions = ["auto", "png", "jpeg", "gif"];
 
 export default () => {
     useProxy(storage);
@@ -10,25 +12,23 @@ export default () => {
     return (
         <RN.ScrollView>
             <BetterTableRowGroup title="Settings">
-                {
-                    [
-                        {
-                            label: "Enable Guild Icon Preview",
-                            key: "guildIconPreview",
-                        },
-                        {
-                            label: "Download as .png/.jpeg instead of .bin",
-                            key: "useDirectImageExtension",
-                        }
-                    ].map(({ label, key }) => ({
-                        label,
-                        onPress: () => {
-                            storage[key] = !storage[key];
-                            showToast(`${label} ${storage[key] ? "enabled" : "disabled"}`);
-                        },
-                        trailing: <BetterTableRowGroup.Switch value={storage[key]} onValueChange={v => (storage[key] = v)} />
-                    }))
-                }
+                <BetterTableRowGroup.Switch
+                    label="Enable Guild Icon Preview"
+                    value={storage.guildIconPreview}
+                    onValueChange={(v) => {
+                        storage.guildIconPreview = v;
+                        showToast(`Guild icon preview ${v ? "enabled" : "disabled"}`);
+                    }}
+                />
+                <BetterTableRowGroup.Select
+                    label="Image Format"
+                    value={storage.imageFormat}
+                    options={extOptions.map(x => ({ label: x.toUpperCase(), value: x }))}
+                    onChange={(val) => {
+                        storage.imageFormat = val;
+                        showToast(`Image format set to ${val}`);
+                    }}
+                />
             </BetterTableRowGroup>
         </RN.ScrollView>
     );
